@@ -28,12 +28,49 @@
   </style>
 </head>
 <body>
-  <!-- Your Looker Studio Dashboard -->
+  <!-- Embedded Looker Studio Dashboard -->
   <iframe
+    id="dashboardFrame"
     src="https://lookerstudio.google.com/embed/reporting/8aba6caf-d029-42d2-a683-60d388b6fba5/page/p_yrxpss9cwd"
     frameborder="0"
     allowfullscreen
     sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
   </iframe>
+
+  <!-- Track page changes inside the Looker Studio dashboard -->
+  <script>
+    // Reference the iframe
+    const iframe = document.getElementById("dashboardFrame");
+    let currentSrc = iframe.src;
+
+    // Function to extract page ID from the iframe URL
+    function getPageIdFromUrl(url) {
+      try {
+        const parts = url.split("/page/");
+        if (parts.length > 1) {
+          return parts[1].split(/[?&]/)[0];
+        }
+      } catch (err) {
+        console.warn("Error parsing Looker Studio page ID:", err);
+      }
+      return "unknown";
+    }
+
+    // Periodically check if the iframe's page changed
+    setInterval(() => {
+      if (iframe.src !== currentSrc) {
+        currentSrc = iframe.src;
+        const pageID = getPageIdFromUrl(currentSrc);
+        console.log("Dashboard page changed →", pageID);
+
+        // Send custom GA4 event for page navigation inside dashboard
+        gtag('event', 'dashboard_page_view', {
+          'dashboard_page_id': pageID,
+          'event_category': 'Dashboard Navigation',
+          'event_label': 'User switched Looker Studio page'
+        });
+      }
+    }, 3000); // check every 3 seconds
+  </script>
 </body>
 </html>
